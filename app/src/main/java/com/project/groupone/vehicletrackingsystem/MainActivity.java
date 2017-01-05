@@ -1,9 +1,11 @@
 package com.project.groupone.vehicletrackingsystem;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -15,20 +17,38 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.project.groupone.vehicletrackingsystem.helper.SQLiteHandler;
 import com.project.groupone.vehicletrackingsystem.helper.SessionManager;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener , OnMapReadyCallback {
 
+
+    private GoogleMap mMap;
+    private static final String TAG = MainActivity.class.getSimpleName();
     private SQLiteHandler db;
     private SessionManager session;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         //SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
@@ -126,5 +146,22 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+
+        mMap = googleMap;
+
+        // Add a marker in Sydney and move the camera
+        LatLng aait = new LatLng(9.040591, 38.762065);
+        LatLng fourkilo = new LatLng(9.033490, 38.763275);
+
+
+
+        mMap.addMarker(new MarkerOptions().position(fourkilo).title("Vehicle2"));
+        mMap.addMarker(new MarkerOptions().position(aait).title("Vehicle 1"));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(aait));
+
     }
 }
