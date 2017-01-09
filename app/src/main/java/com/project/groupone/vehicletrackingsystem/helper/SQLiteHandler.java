@@ -9,6 +9,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.BitmapFactory;
+import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import java.util.HashMap;
 
@@ -20,17 +23,26 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
 
     // Database Name
-    private static final String DATABASE_NAME = "android_api";
+    private static final String DATABASE_NAME = "VTS";
 
     // Login table name
     private static final String TABLE_USER = "user";
 
     // Login Table Columns names
-    private static final String KEY_ID = "id";
-    private static final String KEY_NAME = "name";
-    private static final String KEY_EMAIL = "email";
-    private static final String KEY_UID = "uid";
-    private static final String KEY_CREATED_AT = "created_at";
+    private static final String KEY_PID = "PID";
+    private static final String KEY_UID = "UID";
+    private static final String KEY_FNAME = "FName";
+    private static final String KEY_MNAME = "MName";
+    private static final String KEY_LNAME = "LName";
+    private static final String KEY_EMAIL = "Email";
+    private static final String KEY_SEX = "Sex";
+    private static final String KEY_BIRTHDAY = "BirthDay";
+    private static final String KEY_TEL="Tel";
+    private static final String KEY_ADDRESS = "Address";
+    private static final String KEY_REG_DATE = "RegDate";
+    private static final String KEY_UPDATED_DATE = "UpdateDate";
+    private static final String KEY_CREATED_DATE = "CreatedDate";
+    private static final String KEY_PHOTO = "Photo";
 
     public SQLiteHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -40,9 +52,13 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_LOGIN_TABLE = "CREATE TABLE " + TABLE_USER + "("
-                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_NAME + " TEXT,"
-                + KEY_EMAIL + " TEXT UNIQUE," + KEY_UID + " TEXT,"
-                + KEY_CREATED_AT + " TEXT" + ")";
+                + KEY_UID + " INTEGER PRIMARY KEY," + KEY_PID + " INTEGER UNIQUE," + KEY_FNAME + " TEXT,"
+                + KEY_MNAME + " TEXT," + KEY_LNAME + " TEXT,"
+                + KEY_EMAIL + " TEXT UNIQUE," + KEY_SEX + " TEXT,"
+                + KEY_BIRTHDAY + " TEXT," + KEY_TEL + " TEXT," + KEY_ADDRESS + " TEXT," + KEY_PHOTO + " TEXT,"
+                + KEY_REG_DATE + " TEXT," + KEY_UPDATED_DATE + " TEXT,"
+                + KEY_CREATED_DATE + " TEXT" + ")";
+
         db.execSQL(CREATE_LOGIN_TABLE);
 
         Log.d(TAG, "Database tables created");
@@ -61,14 +77,33 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     /**
      * Storing user details in database
      * */
-    public void addUser(String name, String email, String uid, String created_at) {
+    public void addUser(String uid, String pid, String fname, String mname, String lname, String email, String sex, String bday, String tel, String address,String regdate,String updateddate,String createddate, String photo) {
+/*        byte[] image;
+
+        if (!TextUtils.isEmpty(photo)){
+           image  = Base64.decode(photo, Base64.DEFAULT);
+        }
+        else {
+            image = new byte[0];
+        }*/
+
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(KEY_NAME, name); // Name
-        values.put(KEY_EMAIL, email); // Email
-        values.put(KEY_UID, uid); // Email
-        values.put(KEY_CREATED_AT, created_at); // Created At
+        values.put(KEY_UID, uid);
+        values.put(KEY_PID, pid);
+        values.put(KEY_FNAME, fname);
+        values.put(KEY_MNAME, mname);
+        values.put(KEY_LNAME, lname);
+        values.put(KEY_EMAIL, email);
+        values.put(KEY_SEX, sex);
+        values.put(KEY_BIRTHDAY, bday);
+        values.put(KEY_TEL, tel);
+        values.put(KEY_ADDRESS, address);
+        values.put(KEY_REG_DATE, regdate);
+        values.put(KEY_UPDATED_DATE,updateddate);
+        values.put(KEY_CREATED_DATE,createddate);
+        values.put(KEY_PHOTO, photo);
 
         // Inserting Row
         long id = db.insert(TABLE_USER, null, values);
@@ -89,10 +124,20 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         // Move to first row
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
-            user.put("name", cursor.getString(1));
-            user.put("email", cursor.getString(2));
-            user.put("uid", cursor.getString(3));
-            user.put("created_at", cursor.getString(4));
+            user.put("UID", cursor.getString(0));
+            user.put("PID", cursor.getString(1));
+            user.put("FName", cursor.getString(2));
+            user.put("MName", cursor.getString(3));
+            user.put("LName", cursor.getString(4));
+            user.put("Email", cursor.getString(5));
+            user.put("Sex", cursor.getString(6));
+            user.put("BirthDay", cursor.getString(7));
+            user.put("Tel", cursor.getString(8));
+            user.put("Address", cursor.getString(9));
+            user.put("Photo", cursor.getString(10));
+            user.put("RegDate",cursor.getString(11));
+            user.put("UpdatedDate",cursor.getString(12));
+            user.put("CreatedDate", cursor.getString(13));
         }
         cursor.close();
         db.close();
@@ -112,6 +157,18 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.close();
 
         Log.d(TAG, "Deleted all user info from sqlite");
+
+        //TODO: Delete user profile while we are at it
+
     }
+
+    public void insertPhoto(String photo_link, String uid){
+        String query = "UPDATE " + TABLE_USER + " SET " + KEY_PHOTO +" = '" + photo_link + "' WHERE " + KEY_UID + " = " + uid;
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(query);
+        db.close();
+
+    }
+
 
 }

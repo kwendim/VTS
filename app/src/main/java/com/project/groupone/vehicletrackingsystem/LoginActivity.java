@@ -5,6 +5,10 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.Snackbar;
@@ -19,6 +23,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -35,11 +40,16 @@ import com.android.volley.Request;
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +63,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import static android.Manifest.permission.READ_CONTACTS;
+import static android.R.attr.path;
 
 /**
  * A login screen that offers login via email/password.
@@ -78,6 +89,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final String TAG = LoginActivity.class.getSimpleName();
     private static boolean success;
     private CountDownLatch latch;
+    private static String pic_location, uid;
 
 
 
@@ -363,24 +375,40 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                         // Check for error node in json
                         if (!error) {
+                            String pid,fname,mname,lname,email,sex,bday,tel,address,regdate,updateddate,createddate;
                             // user successfully logged in
                             // Create login session
                             session.setLogin(true);
 
                             // Now store the user in SQLite
-                            String uid = jObj.getString("uid");
+                            uid = jObj.getString("UID");
+                            pid= jObj.getString("PID");
 
                             JSONObject user = jObj.getJSONObject("user");
-                            String name = user.getString("name");
-                            String email = user.getString("email");
-                            String created_at = user
-                                    .getString("created_at");
+
+                            fname = user.getString("FName");
+                            mname = user.getString("MName");
+                            lname = user.getString("LName");
+                            email = user.getString("Email");
+                            sex = user.getString("Sex");
+                            bday = user.getString("BirthDay");
+                            tel = user.getString("Tel");
+                            address = user.getString("Address");
+                            regdate = user.getString("RegDate");
+                            updateddate = user.getString("UpdatedDate");
+                            createddate = user.getString("CreatedDate");
+                            pic_location = user.getString("Photo");
+
+
+                            Log.d("THEPHOTO", pic_location);
+
+
 
                             // Inserting row in users table
-                            db.addUser(name, email, uid, created_at);
+                            db.addUser(uid,pid,fname,mname,lname,email,sex,bday,tel,address,regdate,updateddate,createddate,pic_location);
                             success= true ;
                             latch.countDown();
-                            Toast.makeText(getApplicationContext(), "Welcome!", Toast.LENGTH_LONG).show();
+
 
                         } else {
                             // Error in login. Get the error message
@@ -430,6 +458,62 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+
+
+            if(success && !TextUtils.isEmpty(pic_location)) {
+
+                String url = AppConfig.MAIN_URL + pic_location;
+
+                // Retrieves an image specified by the URL, displays it in the UI.
+                ImageRequest request = new ImageRequest(url,
+                        new Response.Listener<Bitmap>() {
+                            @Override
+                            public void onResponse(Bitmap bitmap) {
+                               String[] name = pic_location.split("/");
+                                String file_name = name[name.length - 1];
+
+                                File path = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                                File file = new File(path, file_name);
+                                try {
+                                    FileOutputStream fos= new FileOutputStream(file);
+                                    bitmap.compress(Bitmap.CompressFormat.PNG ,90,fos);
+                                    fos.close();
+                                    db.insertPhoto(file.getAbsolutePath(),uid);
+
+                                } catch (FileNotFoundException e) {
+                                    Log.e(TAG,"File NOT FOUND" + e.getMessage());
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    Log.e(TAG,"IO PROBLEM" + e.getMessage());
+                                    e.printStackTrace();
+                                }
+                                latch.countDown();
+
+                            }
+                        }, 0, 0, null,
+                        new Response.ErrorListener() {
+                            public void onErrorResponse(VolleyError error) {
+                                Log.e(TAG, "Problem loading image: " + error.getMessage());
+                                Toast.makeText(getApplicationContext(),
+                                        error.getMessage(), Toast.LENGTH_LONG).show();
+                                latch.countDown();
+
+                            }
+                        });
+
+                latch = new CountDownLatch(1);
+                AppController.getInstance().addToRequestQueue(request, "profile pic request");
+                // Access the RequestQueue through your singleton class.
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+
 
             return success;
         }
