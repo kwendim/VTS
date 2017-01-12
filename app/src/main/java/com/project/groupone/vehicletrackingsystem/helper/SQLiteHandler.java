@@ -61,6 +61,9 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
         db.execSQL(CREATE_LOGIN_TABLE);
 
+//        String GPSData = "CREATE TABLE GPSDATA(GID TEXT PRIMARY KEY,Lat REAL,LON REAL,Bearing TEXT,Time TEXT)";
+//        db.execSQL(GPSData);
+
         Log.d(TAG, "Database tables created");
     }
 
@@ -69,6 +72,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop older table if existed
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER);
+        //db.execSQL("DROP TABLE IF EXISTS " + "GPSDATA");
 
         // Create tables again
         onCreate(db);
@@ -78,14 +82,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
      * Storing user details in database
      * */
     public void addUser(String uid, String pid, String fname, String mname, String lname, String email, String sex, String bday, String tel, String address,String regdate,String updateddate,String createddate, String photo) {
-/*        byte[] image;
 
-        if (!TextUtils.isEmpty(photo)){
-           image  = Base64.decode(photo, Base64.DEFAULT);
-        }
-        else {
-            image = new byte[0];
-        }*/
 
         SQLiteDatabase db = this.getWritableDatabase();
 

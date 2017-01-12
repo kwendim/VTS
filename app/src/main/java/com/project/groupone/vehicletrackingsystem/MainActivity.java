@@ -1,18 +1,15 @@
 package com.project.groupone.vehicletrackingsystem;
 
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -23,15 +20,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Request.Method;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
@@ -41,14 +45,20 @@ import com.google.android.gms.vision.text.Text;
 import com.project.groupone.vehicletrackingsystem.helper.SQLiteHandler;
 import com.project.groupone.vehicletrackingsystem.helper.SessionManager;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
 
 
 public class MainActivity extends AppCompatActivity
@@ -60,8 +70,9 @@ public class MainActivity extends AppCompatActivity
     private SQLiteHandler db;
     private SessionManager session;
     private HashMap<String, String> user;
-
-
+    private String locationString = "";
+    private CountDownLatch latch;
+    TimerTask doAsyncTask;
 
 
 
@@ -71,6 +82,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("Vectra VTS");
         setSupportActionBar(toolbar);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -89,14 +101,14 @@ public class MainActivity extends AppCompatActivity
             logoutUser();
         }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -107,9 +119,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         TextView username = (TextView) navigationView.getHeaderView(0).findViewById(R.id.usernametextview);
         TextView email = (TextView) navigationView.getHeaderView(0).findViewById(R.id.emailtextview);
-        ImageView profile_pic = (ImageView) navigationView.getHeaderView(0).findViewById(R.id.profilepic);
-
-        //File file = getFileStreamPath(user.get("Photo"));
+        RoundedImageView profile_pic = (RoundedImageView) navigationView.getHeaderView(0).findViewById(R.id.profilepic);
 
         username.setText(user.get("FName") + " " + user.get("MName")+ " " + user.get("LName") );
         email.setText(user.get("Email"));
@@ -125,6 +135,8 @@ public class MainActivity extends AppCompatActivity
         db.deleteUsers();
         File file = new File(user.get("Photo"));
         file.delete();
+        doAsyncTask.cancel();
+
 
 
         // Launching the login activity
@@ -193,32 +205,116 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+
         callAsynctask();
-
-        Toast.makeText(getApplicationContext(), "Called",Toast.LENGTH_SHORT).show();
-
         mMap = googleMap;
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                String t = marker.getId();
+                if(t.equals("m0")){
+                    Toast.makeText(getApplicationContext(), "you pressed " + marker.getId()  , Toast.LENGTH_SHORT).show();
 
-        // Add a marker in Sydney and move the camera
-        LatLng aait = new LatLng(9.040591, 38.762065);
-        LatLng fourkilo = new LatLng(9.033490, 38.763275);
-        mMap.addMarker(new MarkerOptions().position(fourkilo).title("Vehicle2"));
-        mMap.addMarker(new MarkerOptions().position(aait).title("Vehicle 1"));
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(aait));
+                } else {
+                    Toast.makeText(getApplicationContext(), "you done messed up nigga", Toast.LENGTH_SHORT).show();
+                }
+
+                return false;
+            }
+        });
+
+
+
+
 
     }
 
-    public class getLocation extends AsyncTask<Void, Void, Void>{
+    public class getLocation extends AsyncTask<Void, Void, String> {
 
 
         @Override
-        protected Void doInBackground(Void... params) {
-            return null;
+        protected String doInBackground(Void... params) {
+
+            StringRequest locationdata = new StringRequest(Method.POST, AppConfig.URL_LOCATION_DATA, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    locationString = response;
+                    latch.countDown();
+
+                }
+
+            }, new Response.ErrorListener() {
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "Login Error: " + error.getMessage());
+                    Toast.makeText(getApplicationContext(),
+                            error.getMessage(), Toast.LENGTH_LONG).show();
+                    latch.countDown();
+
+                }
+            }){
+
+                @Override
+                protected Map<String, String> getParams() {
+                    // Posting parameters to login url
+                    Map<String, String> pars = new HashMap<String, String>();
+                    pars.put("UID", user.get("UID"));
+                    return pars;
+                }
+
+            };
+            latch = new CountDownLatch(1);
+            AppController.getInstance().addToRequestQueue(locationdata, "getting location data");
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return locationString;
         }
 
+
         @Override
-        protected void onPostExecute(Void aVoid) {
-            Toast.makeText(getApplicationContext(),"Updated",Toast.LENGTH_SHORT).show();
+            protected void onPostExecute (String response){
+            //Toast.makeText(getApplicationContext(), "here: " + response, Toast.LENGTH_LONG).show();
+            mMap.clear();
+
+            if(!TextUtils.isEmpty(response)){
+
+                String GID,Lat,Lon,Bearing,Time;
+
+                try {
+                    JSONObject jObj;
+                    JSONArray jsonArray = new JSONArray(response);
+                    LatLng place = null;
+                    for (int x = 0; x < jsonArray.length(); x++) {
+                        jObj = jsonArray.getJSONObject(x);
+
+                        GID = jObj.getString("GID");
+                        Lat = jObj.getString("Lat");
+                        Lon = jObj.getString("Lon");
+                        Bearing = jObj.getString("Bearing");
+                        Time = jObj.getString("Time");
+                        place = new LatLng(Double.valueOf(Lat), Double.valueOf(Lon));
+                        int height = 150;
+                        int width = 150;
+                        BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.marker);
+                        Bitmap b = bitmapDrawable.getBitmap();
+                        Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
+                        Marker mark = mMap.addMarker(new MarkerOptions().position(place).title(GID));
+                        mark.setSnippet("Wazneeeep");
+                        mark.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+
+                    }
+                    Toast.makeText(getApplicationContext(),"updated",Toast.LENGTH_SHORT).show();
+
+                } catch (JSONException e) {
+                    Log.d("JSON ERROR: ", e.getMessage());
+                }
+            }
+
+
         }
 
     }
@@ -226,7 +322,7 @@ public class MainActivity extends AppCompatActivity
     public void callAsynctask(){
         final Handler handler = new Handler();
         Timer timer = new Timer();
-        TimerTask doAsyncTask = new TimerTask() {
+        doAsyncTask = new TimerTask() {
             @Override
             public void run() {
                 handler.post(new Runnable() {
@@ -245,8 +341,5 @@ public class MainActivity extends AppCompatActivity
         };
         timer.schedule(doAsyncTask,0,10000);
     }
-
-
-
 
 }
