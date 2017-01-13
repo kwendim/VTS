@@ -12,13 +12,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -27,13 +27,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.project.groupone.vehicletrackingsystem.helper.SQLiteHandler;
-import com.project.groupone.vehicletrackingsystem.helper.SessionManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -69,15 +69,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MapFragment.
-     */
-    // TODO: Rename and change types and number of parameters
+
     public static MapFragment newInstance(String param1, String param2) {
         MapFragment fragment = new MapFragment();
         Bundle args = new Bundle();
@@ -122,14 +114,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                String t = marker.getId();
-                if(t.equals("m0")){
-                    Toast.makeText(getActivity().getApplicationContext(), "you pressed " + marker.getId()  , Toast.LENGTH_SHORT).show();
-
-                } else {
-                    Toast.makeText(getActivity().getApplicationContext(), "you done messed up nigga", Toast.LENGTH_SHORT).show();
-                }
-
+//                String t = marker.getId();
+//                if(t.equals("m0")){
+//                    Toast.makeText(getActivity().getApplicationContext(), "you pressed " + marker.getId()  , Toast.LENGTH_SHORT).show();
+//
+//                } else {
+//                    Toast.makeText(getActivity().getApplicationContext(), "you done messed up nigga", Toast.LENGTH_SHORT).show();
+//                }
+//
                 return false;
             }
         });
@@ -195,8 +187,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             if(!TextUtils.isEmpty(response)){
 
                 String GID,Lat,Lon,Bearing,Time;
+                List<HashMap<String,String>> vehicles = db.getVehicleDetails();
 
                 try {
+                    HashMap<String,String> data = null;
                     JSONObject jObj;
                     JSONArray jsonArray = new JSONArray(response);
                     LatLng place = null;
@@ -204,6 +198,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                         jObj = jsonArray.getJSONObject(x);
 
                         GID = jObj.getString("GID");
+                        for (int i = 0 ; i < vehicles.size(); i++){
+                            if(GID.equals(vehicles.get(i).get("GID"))) {
+                                data = vehicles.get(i);
+                                vehicles.remove(i);
+                                break;
+                            }
+                        }
+
                         Lat = jObj.getString("Lat");
                         Lon = jObj.getString("Lon");
                         Bearing = jObj.getString("Bearing");
@@ -215,7 +217,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                             BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.marker);
                             Bitmap b = bitmapDrawable.getBitmap();
                             Marker mark = mMap.addMarker(new MarkerOptions().position(place).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)).title(GID));
-                            mark.setSnippet("Wazneeeep");
+                            if (data != null) {
+                                mark.setSnippet("Vehicle: " + data.get("VID") + " Name: " + data.get("Name"));
+                            } else {
+                                mark.setSnippet("Fetching Data");
+                            }
                         }
 
                     }
@@ -274,7 +280,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public void onPause() {
         super.onPause();
         doAsyncTask.cancel();
-        locationupdate.cancel(true);
+        //locationupdate.cancel(true);
         //Toast.makeText(getActivity().getApplicationContext(), "Detaching" ,Toast.LENGTH_SHORT).show();
     }
 

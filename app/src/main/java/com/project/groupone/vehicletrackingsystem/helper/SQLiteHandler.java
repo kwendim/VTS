@@ -13,7 +13,11 @@ import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
 
 public class SQLiteHandler extends SQLiteOpenHelper {
     private static final String TAG = SQLiteHandler.class.getSimpleName();
@@ -61,10 +65,14 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
         db.execSQL(CREATE_LOGIN_TABLE);
 
-//        String GPSData = "CREATE TABLE GPSDATA(GID TEXT PRIMARY KEY,Lat REAL,LON REAL,Bearing TEXT,Time TEXT)";
-//        db.execSQL(GPSData);
+        String GPSData = "CREATE TABLE GPSData(GID TEXT PRIMARY KEY,Lat REAL,LON REAL,Bearing TEXT,Time TEXT)";
+        db.execSQL(GPSData);
 
-        Log.d(TAG, "Database tables created");
+        String Vehicles = "CREATE TABLE Vehicles(VID TEXT PRIMARY KEY,UID INTEGER,GID TEXT," +
+                "BrandName TEXT,ModelNumber TEXT,EngineCC INTEGER,Color TEXT,Image TEXT,Name TEXT,Status INTEGER)";
+        db.execSQL(Vehicles);
+
+        Log.d(TAG, db.toString());
     }
 
     // Upgrading database
@@ -72,8 +80,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Drop older table if existed
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER);
-        //db.execSQL("DROP TABLE IF EXISTS " + "GPSDATA");
-
+        db.execSQL("DROP TABLE IF EXISTS " + "GPSData");
+        db.execSQL("DROP TABLE IF EXISTS " + "Vehicles");
         // Create tables again
         onCreate(db);
     }
@@ -112,6 +120,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     /**
      * Getting user data from database
      * */
+
     public HashMap<String, String> getUserDetails() {
         HashMap<String, String> user = new HashMap<String, String>();
         String selectQuery = "SELECT  * FROM " + TABLE_USER;
@@ -151,6 +160,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         // Delete All Rows
         db.delete(TABLE_USER, null, null);
+        db.delete("Vehicles",null,null);
+        db.delete("GPSData",null,null);
         db.close();
 
         Log.d(TAG, "Deleted all user info from sqlite");
@@ -166,6 +177,77 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.close();
 
     }
+    public void insertVehiclePhoto(String photo_link, String vid){
+        String query = "UPDATE Vehicles SET Image = '" + photo_link + "' WHERE VID = '" + vid + "'";
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL(query);
+        db.close();
+    }
+
+    public void addVehicle(String vid, String uid, String gid, String brandname , String modelno, String enginecc, String color, String image,String name, String status) {
+        //String Vehicles = "CREATE TABLE Vehicles(VID TEXT PRIMARY KEY,UID INTEGER PRIMARY KEY,GID TEXT PRIMARY KEY," +
+          //      "BrandName TEXT,ModelNumber TEXT,EngineCC INTEGER,Color TEXT,Image TEXT,Name TEXT,Status INTEGER)";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("VID", vid);
+        values.put("UID", Integer.valueOf(uid));
+        values.put("GID", Integer.valueOf(gid));
+        values.put("BrandName", brandname);
+        values.put("ModelNumber", modelno);
+        values.put("EngineCC", Integer.valueOf(enginecc));
+        values.put("Color", color);
+        values.put("Image", image);
+        values.put("Name", name);
+        values.put("Status", status);
 
 
+        // Inserting Row
+        long id = db.insert("Vehicles", null, values);
+        db.close(); // Closing database connection
+
+        Log.d(TAG, "New Vehicle inserted into sqlite: " + vid);
+    }
+
+
+    public List<HashMap<String,String>> getVehicleDetails() {
+
+        List<HashMap<String,String>> vehicleDetails = new ArrayList<>();
+        HashMap<String, String> vehicles;
+
+        String selectQuery = "SELECT  * FROM Vehicles";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        // Move to first row
+        Log.d("cursor_count", String.valueOf(cursor.getCount()));
+
+
+
+        if(cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+
+                vehicles = new HashMap<String, String>();
+                vehicles.put("VID", cursor.getString(0));
+                vehicles.put("UID", cursor.getString(1));
+                vehicles.put("GID", cursor.getString(2));
+                vehicles.put("BrandName", cursor.getString(3));
+                vehicles.put("ModelNumber", cursor.getString(4));
+                vehicles.put("EngineCC", cursor.getString(5));
+                vehicles.put("Color", cursor.getString(6));
+                vehicles.put("Image", cursor.getString(7));
+                vehicles.put("Name", cursor.getString(8));
+                vehicles.put("Status", cursor.getString(9));
+                vehicleDetails.add(vehicles);
+
+            }
+
+        }
+        cursor.close();
+        db.close();
+        Log.d(TAG, "Fetching vehicle from Sqlite: " + vehicleDetails.toString());
+
+        return vehicleDetails;
+    }
 }

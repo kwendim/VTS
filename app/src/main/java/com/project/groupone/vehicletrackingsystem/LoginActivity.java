@@ -330,7 +330,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     public void forgotpass(View view) {
-        Toast.makeText(this,"MTSM, yasazenal",Toast.LENGTH_LONG).show();
+        Toast.makeText(this,"Launch Forgot Password Activity",Toast.LENGTH_LONG).show();
     }
 
 
