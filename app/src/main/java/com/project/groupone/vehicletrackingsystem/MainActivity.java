@@ -66,9 +66,6 @@ public class MainActivity extends AppCompatActivity
     private List<HashMap<String,String>> vehicles = new ArrayList<>();
     private static String pic_location,temp_holder,vehicle_id;
     private List<HashMap<String,String>> vehicles_list = new ArrayList<>();
-
-
-
     private List<HashMap<String,String>> drivers = new ArrayList<>();
 
     @Override
@@ -94,7 +91,9 @@ public class MainActivity extends AppCompatActivity
 //        getVehicles vehicleGetter= new getVehicles();
 //        vehicleGetter.execute();
 
-        NetworkCommunication.startActionFoo(this, user.get("UID"), "litlite");
+        NetworkCommunication.startActionGetVehicles(this, user.get("UID"), "litlite");
+        NetworkCommunication.startActionGetDrivers(this, user.get("UID"), "litlite");
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -131,13 +130,18 @@ public class MainActivity extends AppCompatActivity
 
     private void logoutUser() {
         session.setLogin(false);
-//        File file = new File(user.get("Photo"));
-//        file.delete();
-//        vehicles = db.getVehicleDetails();
-//        for (int i = 0 ; i < vehicles.size(); i++){
-//            file = new File(vehicles.get(i).get("Image"));
-//            file.delete();
-//        }
+        File file = new File(user.get("Photo"));
+        file.delete();
+        vehicles = db.getVehicleDetails();
+        for (int i = 0 ; i < vehicles.size(); i++){
+            file = new File(vehicles.get(i).get("Image"));
+            file.delete();
+        }
+        drivers = db.getDriversDetails();
+        for (int i = 0 ; i < drivers.size(); i++){
+            file = new File(drivers.get(i).get("Photo"));
+            file.delete();
+        }
        db.deleteUsers();
 
 

@@ -45,10 +45,10 @@ import java.util.concurrent.CountDownLatch;
 public class NetworkCommunication extends IntentService {
     private SQLiteHandler db;
     private HashMap<String, String> user;
-    private String vehiclestring;
+    private String vehiclestring,driverstring;
     private CountDownLatch latch;
     private List<HashMap<String,String>> vehicles = new ArrayList<>();
-    private static String pic_location,temp_holder,vehicle_id;
+    private static String pic_location,temp_holder,vehicle_id,driver_id;
     private List<HashMap<String,String>> vehicles_list = new ArrayList<>();
     private static final String TAG = NetworkCommunication.class.getSimpleName();
 
@@ -56,12 +56,13 @@ public class NetworkCommunication extends IntentService {
 
     // TODO: Rename actions, choose action names that describe tasks that this
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_FOO = "com.project.groupone.vehicletrackingsystem.action.FOO";
-    private static final String ACTION_BAZ = "com.project.groupone.vehicletrackingsystem.action.BAZ";
+    private static final String ACTION_FETCH_VEHICLES = "com.project.groupone.vehicletrackingsystem.action.GETVEHICLS";
+    private static final String ACTION_FETCH_DRIVERS = "com.project.groupone.vehicletrackingsystem.action.GETDRIVERS";
 
     // TODO: Rename parameters
     private static final String EXTRA_PARAM1 = "com.project.groupone.vehicletrackingsystem.extra.PARAM1";
     private static final String EXTRA_PARAM2 = "com.project.groupone.vehicletrackingsystem.extra.PARAM2";
+
 
     public NetworkCommunication() {
         super("NetworkCommunication");
@@ -74,9 +75,9 @@ public class NetworkCommunication extends IntentService {
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
+    public static void startActionGetVehicles(Context context, String param1, String param2) {
         Intent intent = new Intent(context, NetworkCommunication.class);
-        intent.setAction(ACTION_FOO);
+        intent.setAction(ACTION_FETCH_VEHICLES);
         intent.putExtra(EXTRA_PARAM1, param1);
         intent.putExtra(EXTRA_PARAM2, param2);
         Log.d("Service", "Starting Action Foo");
@@ -89,10 +90,10 @@ public class NetworkCommunication extends IntentService {
      *
      * @see IntentService
      */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
+
+    public static void startActionGetDrivers(Context context, String param1, String param2) {
         Intent intent = new Intent(context, NetworkCommunication.class);
-        intent.setAction(ACTION_BAZ);
+        intent.setAction(ACTION_FETCH_DRIVERS);
         intent.putExtra(EXTRA_PARAM1, param1);
         intent.putExtra(EXTRA_PARAM2, param2);
         context.startService(intent);
@@ -104,14 +105,14 @@ public class NetworkCommunication extends IntentService {
             db = new SQLiteHandler(this);
 
             final String action = intent.getAction();
-            if (ACTION_FOO.equals(action)) {
+            if (ACTION_FETCH_VEHICLES.equals(action)) {
                 final String param1 = intent.getStringExtra(EXTRA_PARAM1);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionFoo(param1, param2);
-            } else if (ACTION_BAZ.equals(action)) {
+                handleActionGetVehicles(param1, param2);
+            } else if (ACTION_FETCH_DRIVERS.equals(action)) {
                 final String param1 = intent.getStringExtra(EXTRA_PARAM1);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
+                handleActionGetDrivers(param1, param2);
             }
         }
     }
@@ -120,7 +121,7 @@ public class NetworkCommunication extends IntentService {
      * Handle action Foo in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionFoo(final String param1, String param2) {
+    private void handleActionGetVehicles(final String param1, String param2) {
 
         Log.d("Service","Handling Foo");
         List<HashMap<String,String>> db_vehicles = db.getVehicleDetails();
@@ -279,8 +280,150 @@ public class NetworkCommunication extends IntentService {
      * Handle action Baz in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
+    private void handleActionGetDrivers(final String param1, String param2) {
+
+        Log.d("Service","Handling Driver Get");
+        List<HashMap<String,String>> db_drivers = db.getDriversDetails();
+        HashSet<String> driver_id_list = new HashSet<>();
+        for(HashMap<String, String> driver : db_drivers){
+            driver_id_list.add(driver.get("DID"));
+        }
+        final StringRequest driverdata= new StringRequest(Request.Method.POST, AppConfig.URL_DRIVERS_DATA, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                driverstring = response;
+                latch.countDown();
+
+            }
+
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Driver Fetch Error: " + error.getMessage());
+/*                    Toast.makeText(getActivity().getApplicationContext(),
+                            error.getMessage(), Toast.LENGTH_LONG).show();*/
+                latch.countDown();
+
+            }
+        }){
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting parameters to login url
+                Map<String, String> pars = new HashMap<String, String>();
+                pars.put("UID", param1);
+                return pars;
+            }
+
+        };
+        latch = new CountDownLatch(1);
+        AppController.getInstance().addToRequestQueue(driverdata, "getting driver data");
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if(!TextUtils.isEmpty(driverstring)){
+            String did,pid,fname,mname,lname,sex,bday,tel,address,regdate,agent,isassigned;
+
+            try {
+                JSONObject jObj;
+                JSONArray jsonArray = new JSONArray(driverstring);
+                for (int x = 0; x < jsonArray.length(); x++) {
+                    jObj = jsonArray.getJSONObject(x);
+
+                    did = jObj.getString("DID");
+                    isassigned = jObj.getString("IsAssigned");
+
+
+                    if (driver_id_list.contains(did) ){
+                        driver_id_list.remove(did);
+                        continue;
+                    }
+
+                    pid= jObj.getString("PID");
+                    fname = jObj.getString("FName");
+                    mname = jObj.getString("MName");
+                    lname = jObj.getString("LName");
+                    sex = jObj.getString("Sex");
+                    bday = jObj.getString("BirthDay");
+                    tel = jObj.getString("Tel");
+                    address = jObj.getString("Address");
+                    regdate = jObj.getString("RegDate");
+                    agent = jObj.getString("Agent");
+                    pic_location = jObj.getString("Photo");
+
+                    db.addDriver(did,pid,fname,mname,lname,sex,bday,tel,address,pic_location,regdate,agent,isassigned);
+
+                    if (!TextUtils.isEmpty(pic_location)){
+                        String url = AppConfig.MAIN_URL + pic_location;
+                        temp_holder = pic_location;
+                        driver_id = did;
+
+                        ImageRequest request = new ImageRequest(url,
+                                new Response.Listener<Bitmap>() {
+                                    @Override
+                                    public void onResponse(Bitmap bitmap) {
+
+                                        String[] name = temp_holder.split("/");
+                                        String file_name = name[name.length - 1];
+                                        File path = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                                        File file = new File(path, file_name);
+                                        try {
+                                            FileOutputStream fos= new FileOutputStream(file);
+                                            bitmap.compress(Bitmap.CompressFormat.PNG ,90,fos);
+                                            fos.close();
+                                            db.getDriversDetails();
+                                            db.insertDriverPhoto(file.getAbsolutePath(),driver_id);
+                                            latch.countDown();
+
+                                        } catch (FileNotFoundException e) {
+                                            Log.e(TAG,"File NOT FOUND" + e.getMessage());
+                                            e.printStackTrace();
+                                            latch.countDown();
+                                        } catch (IOException e) {
+                                            Log.e(TAG,"IO PROBLEM" + e.getMessage());
+                                            e.printStackTrace();
+                                            latch.countDown();
+                                        }
+
+                                    }
+                                }, 0, 0, null,
+                                new Response.ErrorListener() {
+                                    public void onErrorResponse(VolleyError error) {
+                                        Log.e(TAG, "Problem loading image: " + error.getMessage());
+                                        latch.countDown();
+
+                                    }
+                                });
+                        latch = new CountDownLatch(1);
+                        AppController.getInstance().addToRequestQueue(request, "driver pic request");
+                        try{
+                            latch.await();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                }
+
+                if(driver_id_list.isEmpty()){
+                    Log.d("Here", "NOTHIN IN THIS BITCH NO MORE");
+                }
+                else {
+                    for(String DID : driver_id_list){
+                        db.removeDriver(DID);
+
+                    }
+                }
+
+            } catch (JSONException e) {
+                Log.d("JSON ERROR: ", e.getMessage());
+            }
+        }
+
+
     }
 }

@@ -13,5 +13,6 @@ public class AppConfig {
     public static String URL_REGISTER = MAIN_URL  + "register.php";
     public static String URL_VEHICLES_DATA= MAIN_URL + "vehicles.php";
     public static String URL_LOCATION_DATA = MAIN_URL + "location.php";
+    public static String URL_DRIVERS_DATA = MAIN_URL + "drivers.php";
 
 }

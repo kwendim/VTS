@@ -48,10 +48,6 @@
         </activity>
 
         <service
-            android:name=".NetworkCom"
-            android:enabled="true"
-            android:exported="false" />
-        <service
             android:name=".NetworkCommunication"
             android:exported="false"></service>
     </application>

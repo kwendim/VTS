@@ -101,7 +101,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         setContentView(R.layout.activity_login);
 
         db = new SQLiteHandler(getApplicationContext());
-        db.getData();
 
         // Session manager
         session = new SessionManager(getApplicationContext());
