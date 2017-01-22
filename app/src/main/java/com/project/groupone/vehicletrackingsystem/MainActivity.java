@@ -52,7 +52,7 @@ import static com.project.groupone.vehicletrackingsystem.VehiclesFragment.*;
 
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnListFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener, VehiclesFragment.OnListFragmentInteractionListener,DriversFragment.OnListFragmentInteractionListener {
 
 
     private GoogleMap mMap;
@@ -215,6 +215,11 @@ public class MainActivity extends AppCompatActivity
 
 
         } else if (id == R.id.nav_drivers) {
+            DriversFragment newFragment = new DriversFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            toolbar.setTitle("Drivers");
+            transaction.replace(R.id.my_main_container, newFragment);
+            transaction.commit();
 
         } else if (id == R.id.nav_reports) {
 
@@ -235,151 +240,10 @@ public class MainActivity extends AppCompatActivity
         Log.d("just pressed", item);
 
 
-
     }
 
-   /* public class getVehicles extends AsyncTask<Void, Void, Void> {
-
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-
-            final StringRequest vehicledata= new StringRequest(Request.Method.POST, AppConfig.URL_VEHICLES_DATA, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    vehiclestring = response;
-                    latch.countDown();
-
-                }
-
-            }, new Response.ErrorListener() {
-
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e(TAG, "Login Error: " + error.getMessage());
-*//*                    Toast.makeText(getActivity().getApplicationContext(),
-                            error.getMessage(), Toast.LENGTH_LONG).show();*//*
-                    latch.countDown();
-
-                }
-            }){
-
-                @Override
-                protected Map<String, String> getParams() {
-                    // Posting parameters to login url
-                    Map<String, String> pars = new HashMap<String, String>();
-                    pars.put("UID", user.get("UID"));
-                    return pars;
-                }
-
-            };
-            latch = new CountDownLatch(1);
-            AppController.getInstance().addToRequestQueue(vehicledata, "getting location data");
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            if(!TextUtils.isEmpty(vehiclestring)){
-                String VID,UID,GID,BrandName,ModelNumber,Name,EngineCC,Color,Status;
-                List<HashMap<String,String>> db_vehicles = db.getVehicleDetails();
-
-
-                try {
-                    JSONObject jObj;
-                    JSONArray jsonArray = new JSONArray(vehiclestring);
-                    for (int x = 0; x < jsonArray.length(); x++) {
-                        jObj = jsonArray.getJSONObject(x);
-                        VID = jObj.getString("VID");
-                        //TODO: Implement check on already existing database data and make changes
-
-*//*                        for (int i = 0 ; i < db_vehicles.size(); i++){
-                            if(VID.equals(db_vehicles.get(i).get("VID"))) {
-                                HashMap<String,String> data = db_vehicles.get(i);
-                                db_vehicles.remove(i);
-                                break;
-                            }
-                        }
-*//*
-
-                        UID = user.get("UID");
-                        GID = jObj.getString("GID");
-                        BrandName = jObj.getString("BrandName");
-                        ModelNumber = jObj.getString("ModelNumber");
-                        Name = jObj.getString("Name");
-                        pic_location = jObj.getString("Image");
-                        EngineCC = jObj.getString("EngineCC");
-                        Color = jObj.getString("Color");
-                        Status = jObj.getString("Status");
-                        db.addVehicle(VID,UID,GID,BrandName,ModelNumber,EngineCC,Color,pic_location,Name,Status);
-
-                        if (!TextUtils.isEmpty(pic_location)){
-                            String url = AppConfig.MAIN_URL + pic_location;
-                            temp_holder = pic_location;
-                            vehicle_id = VID;
-
-                            ImageRequest request = new ImageRequest(url,
-                                    new Response.Listener<Bitmap>() {
-                                        @Override
-                                        public void onResponse(Bitmap bitmap) {
-
-                                            String[] name = temp_holder.split("/");
-                                            String file_name = name[name.length - 1];
-                                            File path = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                                            File file = new File(path, file_name);
-                                            try {
-                                                FileOutputStream fos= new FileOutputStream(file);
-                                                bitmap.compress(Bitmap.CompressFormat.PNG ,90,fos);
-                                                fos.close();
-                                                Log.d("HereIs", vehicle_id + ", " + file_name);
-                                                db.getVehicleDetails();
-                                                db.insertVehiclePhoto(file.getAbsolutePath(),vehicle_id);
-                                                latch.countDown();
-
-                                            } catch (FileNotFoundException e) {
-                                                Log.e(TAG,"File NOT FOUND" + e.getMessage());
-                                                e.printStackTrace();
-                                                latch.countDown();
-                                            } catch (IOException e) {
-                                                Log.e(TAG,"IO PROBLEM" + e.getMessage());
-                                                e.printStackTrace();
-                                                latch.countDown();
-                                            }
-
-                                        }
-                                    }, 0, 0, null,
-                                    new Response.ErrorListener() {
-                                        public void onErrorResponse(VolleyError error) {
-                                            Log.e(TAG, "Problem loading image: " + error.getMessage());
-                                            Toast.makeText(getApplicationContext(),
-                                                    error.getMessage(), Toast.LENGTH_LONG).show();
-                                            latch.countDown();
-
-                                        }
-                                    });
-                            latch = new CountDownLatch(1);
-                            AppController.getInstance().addToRequestQueue(request, "profile pic request");
-                            try{
-                                latch.await();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-
-                        }
-                    }
-
-                } catch (JSONException e) {
-                    Log.d("JSON ERROR: ", e.getMessage());
-                }
-            }
-            return null;
-
-        }
 
 
 
-    }*/
+
 }
