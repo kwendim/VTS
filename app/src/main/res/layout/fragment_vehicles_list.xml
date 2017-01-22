@@ -6,8 +6,8 @@
     android:name="com.project.groupone.vehicletrackingsystem.VehiclesFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
     app:layoutManager="LinearLayoutManager"
     tools:context="com.project.groupone.vehicletrackingsystem.VehiclesFragment"
-    tools:listitem="@layout/fragment_vehicles2" />
+    tools:listitem="@layout/fragment_vehicles2"
+    android:background="@drawable/side_nav_bar"
+   />

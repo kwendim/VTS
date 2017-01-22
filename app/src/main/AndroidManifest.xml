@@ -19,7 +19,6 @@
         android:label="Vectra VTS"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
@@ -47,6 +46,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.project.groupone.vehicletrackingsystem.LoginActivity" />
         </activity>
+
+        <service
+            android:name=".NetworkCom"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".NetworkCommunication"
+            android:exported="false"></service>
     </application>
 
 </manifest>

@@ -69,7 +69,7 @@ public class VehiclesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db = new SQLiteHandler(getActivity().getApplicationContext());
-        user = db.getUserDetails();
+        //user = db.getUserDetails();
 
 
     }
@@ -85,10 +85,6 @@ public class VehiclesFragment extends Fragment {
             recyclerView = (RecyclerView) view;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
             List<HashMap<String,String>> db_vehicles = db.getVehicleDetails();
-            Log.d("vehicle_details", db_vehicles.toString());
-
-            //getVehicles vehicleGetter= new getVehicles();
-            //vehicleGetter.execute();
             recyclerView.setAdapter(new MyVehiclesRecyclerViewAdapter(db_vehicles, mListener));
         }
         return view;

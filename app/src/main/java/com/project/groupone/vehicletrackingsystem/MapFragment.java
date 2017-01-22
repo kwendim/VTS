@@ -32,6 +32,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private Timer timer;
     private SQLiteHandler db;
     private MapFragment.getLocation locationupdate;
+    public List<MarkerOptions> marker_array = new ArrayList<>();
 
 
 
@@ -111,28 +113,31 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
         //callAsynctask();
         mMap = googleMap;
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom((new LatLng(9.0405910,38.7620650)), 10.5f));
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+
             @Override
             public boolean onMarkerClick(Marker marker) {
 //                String t = marker.getId();
 //                if(t.equals("m0")){
-//                    Toast.makeText(getActivity().getApplicationContext(), "you pressed " + marker.getId()  , Toast.LENGTH_SHORT).show();
+//                     Toast.makeText(getActivity().getApplicationContext(), "you pressed " + marker.getId()  , Toast.LENGTH_SHORT).show();
 //
 //                } else {
 //                    Toast.makeText(getActivity().getApplicationContext(), "you done messed up nigga", Toast.LENGTH_SHORT).show();
 //                }
-//
+
                 return false;
             }
         });
 
     }
 
-    public class getLocation extends AsyncTask<Void, Void, String> {
+    public class getLocation extends AsyncTask<Void, Void, List<MarkerOptions>> {
 
 
         @Override
-        protected String doInBackground(Void... params) {
+        protected List<MarkerOptions> doInBackground(Void... params) {
+            marker_array = new ArrayList<>();
 
             StringRequest locationdata = new StringRequest(Request.Method.POST, AppConfig.URL_LOCATION_DATA, new Response.Listener<String>() {
                 @Override
@@ -173,18 +178,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
             Log.d("isCancelled", String.valueOf(isCancelled()));
 
-            return locationString;
-
-        }
-
-
-        @Override
-        protected void onPostExecute (String response){
-            //Toast.makeText(getActivity().getApplicationContext(), "here:" , Toast.LENGTH_LONG).show();
-
-            mMap.clear();
-
-            if(!TextUtils.isEmpty(response)){
+            if(!TextUtils.isEmpty(locationString)){
 
                 String GID,Lat,Lon,Bearing,Time;
                 List<HashMap<String,String>> vehicles = db.getVehicleDetails();
@@ -192,7 +186,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 try {
                     HashMap<String,String> data = null;
                     JSONObject jObj;
-                    JSONArray jsonArray = new JSONArray(response);
+                    JSONArray jsonArray = new JSONArray(locationString);
+                    Log.d("theString",locationString);
                     LatLng place = null;
                     for (int x = 0; x < jsonArray.length(); x++) {
                         jObj = jsonArray.getJSONObject(x);
@@ -210,33 +205,49 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                         Lon = jObj.getString("Lon");
                         Bearing = jObj.getString("Bearing");
                         Time = jObj.getString("Time");
+                        if (Lat == "null" || Lon == "null"){
+                            continue;
+                        }
                         place = new LatLng(Double.valueOf(Lat), Double.valueOf(Lon));
+
                         int height = 150;
                         int width = 150;
-                        if (isAdded()) {
-                            BitmapDrawable bitmapDrawable = (BitmapDrawable) getResources().getDrawable(R.drawable.marker);
-                            Bitmap b = bitmapDrawable.getBitmap();
-                            Marker mark = mMap.addMarker(new MarkerOptions().position(place).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)).title(GID));
-                            if (data != null) {
-                                mark.setSnippet("Vehicle: " + data.get("VID") + " Name: " + data.get("Name"));
-                            } else {
-                                mark.setSnippet("Fetching Data");
-                            }
-                        }
 
+                        MarkerOptions mark = new MarkerOptions().position(place).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)).title(GID);
+                        if (data != null) {
+                            mark.snippet("Vehicle: " + data.get("VID") + " Name: " + data.get("Name"));
+                        } else {
+                            mark.snippet("Fetching Data");
+                        }
+                        marker_array.add(mark);
                     }
-                    Log.d("UpdateStatus", "Updated");
 
                 } catch (JSONException e) {
                     Log.d("JSON ERROR: ", e.getMessage());
                 }
+            }
+            return marker_array;
+
+        }
+
+
+        @Override
+        protected void onPostExecute (List<MarkerOptions> response){
+            //Toast.makeText(getActivity().getApplicationContext(), "here:" , Toast.LENGTH_LONG).show();
+            if (isAdded()) {
+                mMap.clear();
+                for (int i = 0; i < response.size(); i++) {
+                    mMap.addMarker(response.get(i));
+                }
+                Log.d("UpdateStatus", "Updated");
+
             }
 
 
         }
 
         @Override
-        protected void onCancelled(String lash) {
+        protected void onCancelled(List<MarkerOptions> lash) {
             super.onCancelled();
             Log.d("OnCANCELLED CALLED", "YES");
         }

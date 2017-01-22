@@ -5,7 +5,7 @@
     <color name="colorAccent">#2b1ded</color>
     <color name="background">#b3fffb</color>
     <color name="background_btn">#69bfbb</color>
-    <color name= "card_view">#03000000</color>
-
+    <color name= "card_view">#ffffff</color>
+    <color name = "vid_text_view">#b6b1b1</color>
 
 </resources>

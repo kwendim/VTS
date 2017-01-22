@@ -6,8 +6,9 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -18,7 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageButton;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,8 +29,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.maps.*;
-import com.google.android.gms.maps.model.LatLng;
-import com.project.groupone.vehicletrackingsystem.dummy.DummyContent;
 import com.project.groupone.vehicletrackingsystem.helper.SQLiteHandler;
 import com.project.groupone.vehicletrackingsystem.helper.SessionManager;
 
@@ -43,14 +42,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.TimerTask;
+
 import java.util.concurrent.CountDownLatch;
 
 import static com.project.groupone.vehicletrackingsystem.VehiclesFragment.*;
+//import static com.project.groupone.vehicletrackingsystem.NetworkCommunication.*;
 
 
 public class MainActivity extends AppCompatActivity
@@ -71,6 +69,7 @@ public class MainActivity extends AppCompatActivity
 
 
 
+    private List<HashMap<String,String>> drivers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,17 +85,24 @@ public class MainActivity extends AppCompatActivity
 
         user = db.getUserDetails();
 
-
         // session manager
         session = new SessionManager(getApplicationContext());
 
         if (!session.isLoggedIn()) {
             logoutUser();
         }
-        getVehicles vehicleGetter= new getVehicles();
-        vehicleGetter.execute();
-       // List<HashMap<String,String>> lash = db.getVehicleDetails();
+//        getVehicles vehicleGetter= new getVehicles();
+//        vehicleGetter.execute();
 
+        NetworkCommunication.startActionFoo(this, user.get("UID"), "litlite");
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Snackbar.make(v, "this shit clicked", Snackbar.LENGTH_SHORT).show();
+            }
+        });
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -125,14 +131,14 @@ public class MainActivity extends AppCompatActivity
 
     private void logoutUser() {
         session.setLogin(false);
-        File file = new File(user.get("Photo"));
-        file.delete();
-        vehicles = db.getVehicleDetails();
-        for (int i = 0 ; i < vehicles.size(); i++){
-            file = new File(vehicles.get(i).get("Image"));
-            file.delete();
-        }
-        db.deleteUsers();
+//        File file = new File(user.get("Photo"));
+//        file.delete();
+//        vehicles = db.getVehicleDetails();
+//        for (int i = 0 ; i < vehicles.size(); i++){
+//            file = new File(vehicles.get(i).get("Image"));
+//            file.delete();
+//        }
+       db.deleteUsers();
 
 
 
@@ -225,9 +231,10 @@ public class MainActivity extends AppCompatActivity
         Log.d("just pressed", item);
 
 
+
     }
 
-    public class getVehicles extends AsyncTask<Void, Void, Void> {
+   /* public class getVehicles extends AsyncTask<Void, Void, Void> {
 
 
         @Override
@@ -247,8 +254,8 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Log.e(TAG, "Login Error: " + error.getMessage());
-/*                    Toast.makeText(getActivity().getApplicationContext(),
-                            error.getMessage(), Toast.LENGTH_LONG).show();*/
+*//*                    Toast.makeText(getActivity().getApplicationContext(),
+                            error.getMessage(), Toast.LENGTH_LONG).show();*//*
                     latch.countDown();
 
                 }
@@ -284,14 +291,14 @@ public class MainActivity extends AppCompatActivity
                         VID = jObj.getString("VID");
                         //TODO: Implement check on already existing database data and make changes
 
-/*                        for (int i = 0 ; i < db_vehicles.size(); i++){
+*//*                        for (int i = 0 ; i < db_vehicles.size(); i++){
                             if(VID.equals(db_vehicles.get(i).get("VID"))) {
                                 HashMap<String,String> data = db_vehicles.get(i);
                                 db_vehicles.remove(i);
                                 break;
                             }
                         }
-                        */
+*//*
 
                         UID = user.get("UID");
                         GID = jObj.getString("GID");
@@ -370,5 +377,5 @@ public class MainActivity extends AppCompatActivity
 
 
 
-    }
+    }*/
 }

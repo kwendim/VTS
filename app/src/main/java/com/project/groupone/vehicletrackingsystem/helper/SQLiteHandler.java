@@ -1,7 +1,7 @@
 package com.project.groupone.vehicletrackingsystem.helper;
 
 /**
- * Created by kidus on 1/2/17.
+ * Created by kidus wendimagegn on 1/2/17.
  */
 
 import android.content.ContentValues;
@@ -13,6 +13,7 @@ import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,8 +70,21 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.execSQL(GPSData);
 
         String Vehicles = "CREATE TABLE Vehicles(VID TEXT PRIMARY KEY,UID INTEGER,GID TEXT," +
-                "BrandName TEXT,ModelNumber TEXT,EngineCC INTEGER,Color TEXT,Image TEXT,Name TEXT,Status INTEGER)";
+                "DID INTEGER,BrandName TEXT,ModelNumber TEXT,EngineCC INTEGER,Color TEXT,Image TEXT,Name TEXT,Status INTEGER)";
         db.execSQL(Vehicles);
+
+        String Drivers = "CREATE TABLE Drivers(DID INTEGER PRIMARY KEY,Agent TEXT,IsAssigned INTEGER,"
+                + KEY_PID + " INTEGER UNIQUE," + KEY_FNAME + " TEXT,"
+                + KEY_MNAME + " TEXT," + KEY_LNAME + " TEXT,"
+                + KEY_EMAIL + " TEXT UNIQUE," + KEY_SEX + " TEXT,"
+                + KEY_BIRTHDAY + " TEXT," + KEY_TEL + " TEXT," + KEY_ADDRESS + " TEXT," + KEY_PHOTO + " TEXT,"
+                + KEY_REG_DATE + " TEXT," + KEY_UPDATED_DATE + " TEXT,"
+                + KEY_CREATED_DATE + " TEXT" + ")";
+
+        db.execSQL(Drivers);
+
+        Log.d("Drivers", Drivers);
+
 
         Log.d(TAG, db.toString());
     }
@@ -82,6 +96,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USER);
         db.execSQL("DROP TABLE IF EXISTS " + "GPSData");
         db.execSQL("DROP TABLE IF EXISTS " + "Vehicles");
+        db.execSQL("DROP TABLE IF EXISTS " + "Drivers");
         // Create tables again
         onCreate(db);
     }
@@ -162,6 +177,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.delete(TABLE_USER, null, null);
         db.delete("Vehicles",null,null);
         db.delete("GPSData",null,null);
+        db.delete("Drivers",null,null);
         db.close();
 
         Log.d(TAG, "Deleted all user info from sqlite");
@@ -184,7 +200,8 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void addVehicle(String vid, String uid, String gid, String brandname , String modelno, String enginecc, String color, String image,String name, String status) {
+
+    public void addVehicle(String vid, String uid, String gid,String did, String brandname , String modelno, String enginecc, String color, String image,String name, String status) {
         //String Vehicles = "CREATE TABLE Vehicles(VID TEXT PRIMARY KEY,UID INTEGER PRIMARY KEY,GID TEXT PRIMARY KEY," +
           //      "BrandName TEXT,ModelNumber TEXT,EngineCC INTEGER,Color TEXT,Image TEXT,Name TEXT,Status INTEGER)";
 
@@ -194,6 +211,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         values.put("VID", vid);
         values.put("UID", Integer.valueOf(uid));
         values.put("GID", Integer.valueOf(gid));
+        values.put("DID",did);
         values.put("BrandName", brandname);
         values.put("ModelNumber", modelno);
         values.put("EngineCC", Integer.valueOf(enginecc));
@@ -220,9 +238,6 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
-        // Move to first row
-        Log.d("cursor_count", String.valueOf(cursor.getCount()));
-
 
 
         if(cursor.getCount() > 0) {
@@ -232,13 +247,14 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                 vehicles.put("VID", cursor.getString(0));
                 vehicles.put("UID", cursor.getString(1));
                 vehicles.put("GID", cursor.getString(2));
-                vehicles.put("BrandName", cursor.getString(3));
-                vehicles.put("ModelNumber", cursor.getString(4));
-                vehicles.put("EngineCC", cursor.getString(5));
-                vehicles.put("Color", cursor.getString(6));
-                vehicles.put("Image", cursor.getString(7));
-                vehicles.put("Name", cursor.getString(8));
-                vehicles.put("Status", cursor.getString(9));
+                vehicles.put("DID", cursor.getString(3));
+                vehicles.put("BrandName", cursor.getString(4));
+                vehicles.put("ModelNumber", cursor.getString(5));
+                vehicles.put("EngineCC", cursor.getString(6));
+                vehicles.put("Color", cursor.getString(7));
+                vehicles.put("Image", cursor.getString(8));
+                vehicles.put("Name", cursor.getString(9));
+                vehicles.put("Status", cursor.getString(10));
                 vehicleDetails.add(vehicles);
 
             }
@@ -249,5 +265,63 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         Log.d(TAG, "Fetching vehicle from Sqlite: " + vehicleDetails.toString());
 
         return vehicleDetails;
+    }
+
+    public void removeVehicle(String vid) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete("Vehicles", "VID = " + vid ,null);
+        db.close();
+        Log.d(TAG, "Deleted Vehicle " + vid + " info from sqlite");
+
+    }
+
+    public List<HashMap<String, String>> getDriversDetails() {
+
+        List<HashMap<String,String>> DriverDetails = new ArrayList<>();
+        HashMap<String, String> driver;
+
+        String selectQuery = "SELECT  * FROM Drivers";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+
+                driver = new HashMap<String, String>();
+
+                driver.put("DID", cursor.getString(0));
+                driver.put("Agent", cursor.getString(1));
+                driver.put("IsAssigned", cursor.getString(2));
+                driver.put("PID", cursor.getString(3));
+                driver.put("FName", cursor.getString(4));
+                driver.put("MName", cursor.getString(5));
+                driver.put("LName", cursor.getString(6));
+                driver.put("Email", cursor.getString(7));
+                driver.put("Sex", cursor.getString(8));
+                driver.put("BirthDay", cursor.getString(9));
+                driver.put("Tel", cursor.getString(10));
+                driver.put("Address", cursor.getString(11));
+                driver.put("Photo", cursor.getString(12));
+                driver.put("RegDate", cursor.getString(13));
+                driver.put("UpdatedDate", cursor.getString(14));
+                driver.put("CreatedDate", cursor.getString(15));
+                DriverDetails.add(driver);
+            }
+        }
+        cursor.close();
+        db.close();
+        Log.d(TAG, "Fetching user from Sqlite: " + DriverDetails.toString());
+
+        return DriverDetails;
+    }
+
+    public void getData(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String Query = "SHOW TABLES";
+
+        //Cursor response = db.rawQuery(Query, null);
+        Log.d("Database", db.getPath());
+        db.close();
     }
 }
