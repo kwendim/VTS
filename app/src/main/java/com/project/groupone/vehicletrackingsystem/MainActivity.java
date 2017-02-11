@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentTransaction;
@@ -45,6 +46,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 
 import static com.project.groupone.vehicletrackingsystem.VehiclesFragment.*;
@@ -67,6 +70,9 @@ public class MainActivity extends AppCompatActivity
     private static String pic_location,temp_holder,vehicle_id;
     private List<HashMap<String,String>> vehicles_list = new ArrayList<>();
     private List<HashMap<String,String>> drivers = new ArrayList<>();
+    private NavigationView navigationView;
+    TimerTask doAsyncServiceTask;
+    private Timer timer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,13 +101,13 @@ public class MainActivity extends AppCompatActivity
         NetworkCommunication.startActionGetDrivers(this, user.get("UID"), "litlite");
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Snackbar.make(v, "this shit clicked", Snackbar.LENGTH_SHORT).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Snackbar.make(v, "this shit clicked", Snackbar.LENGTH_SHORT).show();
+//            }
+//        });
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -109,7 +115,7 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setItemIconTintList(null);
         navigationView.setCheckedItem(R.id.nav_dashboard);
@@ -124,6 +130,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         onNavigationItemSelected(navigationView.getMenu().findItem(R.id.nav_dashboard));
+        callAsyncServicetask();
 
 
     }
@@ -221,11 +228,13 @@ public class MainActivity extends AppCompatActivity
             transaction.replace(R.id.my_main_container, newFragment);
             transaction.commit();
 
-        } else if (id == R.id.nav_reports) {
-
-        } else if (id == R.id.nav_help) {
+        }  else if (id == R.id.nav_help) {
+            Intent help_intent = new Intent(MainActivity.this, HelpActivity.class);
+            startActivity(help_intent);
 
         } else if (id == R.id.nav_about) {
+            Intent about_us = new Intent(MainActivity.this, AboutUsActivity.class);
+            startActivity(about_us);
 
         }
 
@@ -236,13 +245,49 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    public void onListFragmentInteraction(String item) {
+    public void onListFragmentInteraction(String fragmentTAG, String item) {
         Log.d("just pressed", item);
+        if(fragmentTAG.equals(DriversFragment.class.getSimpleName())){
+            Log.d("just in", fragmentTAG);
+
+        }
+        else if (fragmentTAG.equals(VehiclesFragment.class.getSimpleName())){
+            Log.d("just in", fragmentTAG);
+            MapFragment newFragment = MapFragment.newInstance(item);
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            toolbar.setTitle("Vehicles");
+            navigationView.setCheckedItem(R.id.nav_dashboard);
+            transaction.replace(R.id.my_main_container, newFragment);
+            transaction.commit();
+
+        }
 
 
     }
+    public void callAsyncServicetask(){
+        final Handler handler = new Handler();
+        timer = new Timer();
+        doAsyncServiceTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            NetworkCommunication.startActionGetVehicles(MainActivity.this, user.get("UID"), "litlite");
+                            NetworkCommunication.startActionGetDrivers(MainActivity.this, user.get("UID"), "litlite");
 
-
+                        }
+                        catch (Exception e){
+                            Log.e("AysncTaskException", e.getMessage());
+                            //Toast.makeText(getActivity().getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(doAsyncServiceTask,0,10000);
+    }
 
 
 

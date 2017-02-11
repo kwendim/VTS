@@ -16,7 +16,7 @@ import java.util.List;
 
 
 public class MyDriversRecyclerViewAdapter extends RecyclerView.Adapter<MyDriversRecyclerViewAdapter.ViewHolder> {
-
+    public static final String TAG = DriversFragment.class.getSimpleName();
     private final List<HashMap<String, String>> values;
     private final DriversFragment.OnListFragmentInteractionListener driverlistener;
 
@@ -53,7 +53,7 @@ public class MyDriversRecyclerViewAdapter extends RecyclerView.Adapter<MyDrivers
                 if (null != driverlistener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
-                    driverlistener.onListFragmentInteraction(holder.mItem);
+                    driverlistener.onListFragmentInteraction(TAG , holder.mItem);
                 }
             }
         });

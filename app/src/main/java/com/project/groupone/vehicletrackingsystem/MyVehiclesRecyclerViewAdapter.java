@@ -19,7 +19,7 @@ import java.util.List;
 
 
 public class MyVehiclesRecyclerViewAdapter extends RecyclerView.Adapter<MyVehiclesRecyclerViewAdapter.ViewHolder> {
-
+    public static final String TAG = VehiclesFragment.class.getSimpleName();
     private final List<HashMap<String, String>> values;
     private final OnListFragmentInteractionListener mListener;
 
@@ -58,7 +58,7 @@ public class MyVehiclesRecyclerViewAdapter extends RecyclerView.Adapter<MyVehicl
         @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
 
-            holder.mItem = values.get(position).get("VID");
+            holder.mItem = values.get(position).get("GID");
             holder.mVIdView.setText("ID: " + values.get(position).get("VID"));
             holder.mvehicleName.setText("Name: " + values.get(position).get("Name"));
             holder.mModelNumber.setText(values.get(position).get("ModelNumber"));
@@ -76,7 +76,7 @@ public class MyVehiclesRecyclerViewAdapter extends RecyclerView.Adapter<MyVehicl
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction(holder.mItem);
+                    mListener.onListFragmentInteraction(TAG ,holder.mItem);
                 }
             }
         });

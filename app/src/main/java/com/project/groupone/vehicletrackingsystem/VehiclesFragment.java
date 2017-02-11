@@ -110,7 +110,8 @@ public class VehiclesFragment extends Fragment {
 
 
     public interface OnListFragmentInteractionListener {
-        void onListFragmentInteraction(String item);
+        void onListFragmentInteraction(String fragmentTAG, String item);
+
     }
 
 

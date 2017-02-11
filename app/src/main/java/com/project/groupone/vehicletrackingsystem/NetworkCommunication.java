@@ -101,6 +101,7 @@ public class NetworkCommunication extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.d("Service","Service being executed");
         if (intent != null) {
             db = new SQLiteHandler(this);
 

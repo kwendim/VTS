@@ -14,10 +14,6 @@
             android:id="@+id/nav_drivers"
             android:icon="@drawable/drivers"
             android:title="Drivers" />
-        <item
-            android:id="@+id/nav_reports"
-            android:icon="@drawable/reports"
-            android:title="Reports" />
     </group>
 
     <item android:title="Information">

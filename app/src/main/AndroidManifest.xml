@@ -49,7 +49,10 @@
 
         <service
             android:name=".NetworkCommunication"
-            android:exported="false"></service>
+            android:exported="false" />
+
+        <activity android:name=".HelpActivity" />
+        <activity android:name=".AboutUsActivity"></activity>
     </application>
 
 </manifest>
