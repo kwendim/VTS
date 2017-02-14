@@ -72,14 +72,14 @@
                     android:singleLine="true" />
 
             </android.support.design.widget.TextInputLayout>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Forgot Password ?"
-                android:textColor="@color/colorPrimaryDark"
-                android:clickable="true"
-                android:layout_gravity="center"
-                android:onClick="forgotpass"/>
+            <!--<TextView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="Forgot Password ?"-->
+                <!--android:textColor="@color/colorPrimaryDark"-->
+                <!--android:clickable="true"-->
+                <!--android:layout_gravity="center"-->
+                <!--android:onClick="forgotpass"/>-->
 
             <Button
                 android:id="@+id/email_sign_in_button"

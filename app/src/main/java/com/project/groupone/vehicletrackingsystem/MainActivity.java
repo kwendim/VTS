@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View v) {
-//                Snackbar.make(v, "this shit clicked", Snackbar.LENGTH_SHORT).show();
+//                Snackbar.make(v, "Snackbar clicked", Snackbar.LENGTH_SHORT).show();
 //            }
 //        });
 
@@ -136,6 +136,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void logoutUser() {
+        doAsyncServiceTask.cancel();
         session.setLogin(false);
         File file = new File(user.get("Photo"));
         file.delete();

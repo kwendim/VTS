@@ -262,7 +262,7 @@ public class NetworkCommunication extends IntentService {
                 }
 
                 if(vehicle_id_list.isEmpty()){
-                    Log.d("Here", "NOTHIN IN THIS BITCH NO MORE");
+                    Log.d("Here", "NOTHING IN THE LIST");
                 }
                 else {
                     for(String vid : vehicle_id_list){
